@@ -5,22 +5,26 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v4
     
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Jump CLI ${{ github.ref }}
+        name: Jump CLI ${{ github.ref_name }}
         body: |
-          ## Installation
+          ## 🚀 Jump CLI ${{ github.ref_name }}
+          
+          Enhanced Directory Shortcut Manager - Navigate your projects like a pro!
+          
+          ## 📦 Installation
           
           **One-liner install:**
           ```bash
@@ -34,11 +38,34 @@ jobs:
           ./install.sh
           ```
           
-          ## What's New
-          - Enhanced directory shortcut management
-          - Custom actions support
-          - Fuzzy search capabilities
-          - Colored terminal output
-          - Backup/restore functionality
+          ## ✨ Features
+          - 🎯 Quick navigation with shortcuts
+          - ⚡ Custom actions per shortcut
+          - 🔍 Fuzzy search capabilities
+          - 🎨 Colored terminal output
+          - 📊 Usage statistics
+          - 💾 Backup/restore functionality
+          
+          ## 📖 Quick Start
+          ```bash
+          # Add shortcuts
+          j add myproject ~/path/to/project
+          j add web ~/Projects/Web 'npm start'
+          
+          # Jump to directories
+          j myproject
+          j web run    # Jump and run action
+          
+          # Manage shortcuts
+          j list       # Show all shortcuts
+          j help       # Full documentation
+          ```
+          
+          ---
+          
+          **Full documentation:** https://github.com/amenophis1er/jump-cli#readme
         draft: false
         prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
