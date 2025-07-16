@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Jump CLI ${{ github.ref }}
+        body: |
+          ## Installation
+          
+          **One-liner install:**
+          ```bash
+          curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/install.sh | bash
+          ```
+          
+          **Manual install:**
+          ```bash
+          git clone https://github.com/amenophis1er/jump-cli.git
+          cd jump-cli
+          ./install.sh
+          ```
+          
+          ## What's New
+          - Enhanced directory shortcut management
+          - Custom actions support
+          - Fuzzy search capabilities
+          - Colored terminal output
+          - Backup/restore functionality
+        draft: false
+        prerelease: false

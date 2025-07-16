@@ -1,0 +1,264 @@
+#!/bin/bash
+
+# Jump - Enhanced Directory Shortcut Manager
+# Version: 1.0.0
+# Author: Amen AMOUZOU
+# Repository: https://github.com/amenophis1er/jump-cli
+
+SHORTCUTS_FILE="$HOME/.jump_shortcuts"
+CONFIG_FILE="$HOME/.jump_config"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Initialize files if they don't exist
+[[ ! -f "$SHORTCUTS_FILE" ]] && touch "$SHORTCUTS_FILE"
+[[ ! -f "$CONFIG_FILE" ]] && echo "show_path=true" > "$CONFIG_FILE"
+
+# Helper functions
+print_colored() {
+    echo -e "${1}${2}${NC}"
+}
+
+print_success() { print_colored "$GREEN" "✓ $1"; }
+print_error() { print_colored "$RED" "✗ $1"; }
+print_info() { print_colored "$BLUE" "ℹ $1"; }
+print_warning() { print_colored "$YELLOW" "⚠ $1"; }
+
+# Get shortcut info
+get_shortcut() {
+    grep "^$1:" "$SHORTCUTS_FILE" 2>/dev/null
+}
+
+# Parse shortcut line
+parse_shortcut() {
+    name=$(echo "$1" | cut -d':' -f1)
+    path=$(echo "$1" | cut -d':' -f2)
+    actions=$(echo "$1" | cut -d':' -f3-)
+    echo "$name|$path|$actions"
+}
+
+# Fuzzy search for shortcuts
+fuzzy_search() {
+    if [[ -s "$SHORTCUTS_FILE" ]]; then
+        grep -i "$1" "$SHORTCUTS_FILE" | head -5
+    fi
+}
+
+case "$1" in
+    "add")
+        if [[ -z "$2" || -z "$3" ]]; then
+            print_error "Usage: jump add <shortcut> <path> [actions]"
+            echo "Examples:"
+            echo "  jump add va ~/Projects/Python/voice-agent"
+            echo "  jump add va ~/Projects/Python/voice-agent 'source venv/bin/activate'"
+            echo "  jump add tm ~/tunnel-manager 'git status;ls -la'"
+            exit 1
+        fi
+        
+        shortcut=$2
+        path=$(eval echo "$3")
+        actions=${4:-""}
+        
+        if [[ ! -d "$path" ]]; then
+            print_error "Directory '$path' does not exist"
+            exit 1
+        fi
+        
+        # Check if shortcut already exists
+        if get_shortcut "$shortcut" >/dev/null; then
+            print_warning "Shortcut '$shortcut' already exists. Use 'jump update' to modify it."
+            exit 1
+        fi
+        
+        echo "$shortcut:$path:$actions" >> "$SHORTCUTS_FILE"
+        print_success "Added shortcut '$shortcut' -> '$path'"
+        [[ -n "$actions" ]] && print_info "With actions: $actions"
+        ;;
+        
+    "update")
+        if [[ -z "$2" || -z "$3" ]]; then
+            print_error "Usage: jump update <shortcut> <path> [actions]"
+            exit 1
+        fi
+        
+        shortcut=$2
+        path=$(eval echo "$3")
+        actions=${4:-""}
+        
+        if [[ ! -d "$path" ]]; then
+            print_error "Directory '$path' does not exist"
+            exit 1
+        fi
+        
+        if ! get_shortcut "$shortcut" >/dev/null; then
+            print_error "Shortcut '$shortcut' not found"
+            exit 1
+        fi
+        
+        # Remove old entry and add new one
+        grep -v "^$shortcut:" "$SHORTCUTS_FILE" > "${SHORTCUTS_FILE}.tmp"
+        echo "$shortcut:$path:$actions" >> "${SHORTCUTS_FILE}.tmp"
+        mv "${SHORTCUTS_FILE}.tmp" "$SHORTCUTS_FILE"
+        print_success "Updated shortcut '$shortcut' -> '$path'"
+        ;;
+        
+    "list"|"ls")
+        echo -e "${CYAN}Available shortcuts:${NC}"
+        if [[ -s "$SHORTCUTS_FILE" ]]; then
+            while IFS=':' read -r shortcut path actions; do
+                printf "  ${GREEN}%-15s${NC} -> ${BLUE}%s${NC}" "$shortcut" "$path"
+                [[ -n "$actions" ]] && printf " ${PURPLE}[%s]${NC}" "$actions"
+                echo
+            done < "$SHORTCUTS_FILE"
+        else
+            print_info "No shortcuts defined yet"
+            echo "  Use 'jump add <name> <path>' to create your first shortcut"
+        fi
+        ;;
+        
+    "search"|"find")
+        if [[ -z "$2" ]]; then
+            print_error "Usage: jump search <query>"
+            exit 1
+        fi
+        
+        results=$(fuzzy_search "$2")
+        if [[ -n "$results" ]]; then
+            echo -e "${CYAN}Search results for '$2':${NC}"
+            echo "$results" | while IFS=':' read -r shortcut path actions; do
+                printf "  ${GREEN}%-15s${NC} -> ${BLUE}%s${NC}" "$shortcut" "$path"
+                [[ -n "$actions" ]] && printf " ${PURPLE}[%s]${NC}" "$actions"
+                echo
+            done
+        else
+            print_warning "No shortcuts found matching '$2'"
+        fi
+        ;;
+        
+    "remove"|"rm")
+        if [[ -z "$2" ]]; then
+            print_error "Usage: jump remove <shortcut>"
+            exit 1
+        fi
+        
+        if get_shortcut "$2" >/dev/null; then
+            grep -v "^$2:" "$SHORTCUTS_FILE" > "${SHORTCUTS_FILE}.tmp"
+            mv "${SHORTCUTS_FILE}.tmp" "$SHORTCUTS_FILE"
+            print_success "Removed shortcut '$2'"
+        else
+            print_error "Shortcut '$2' not found"
+        fi
+        ;;
+        
+    "edit")
+        ${EDITOR:-nano} "$SHORTCUTS_FILE"
+        ;;
+        
+    "stats")
+        total=$(wc -l < "$SHORTCUTS_FILE" 2>/dev/null || echo 0)
+        echo -e "${CYAN}Jump Statistics:${NC}"
+        echo "  Total shortcuts: $total"
+        if [[ $total -gt 0 ]]; then
+            echo "  Most recent:"
+            tail -3 "$SHORTCUTS_FILE" | while IFS=':' read -r shortcut path actions; do
+                printf "    ${GREEN}%s${NC} -> ${BLUE}%s${NC}\n" "$shortcut" "$path"
+            done
+        fi
+        ;;
+        
+    "export")
+        backup_file="${2:-$HOME/jump_backup_$(date +%Y%m%d_%H%M%S).txt}"
+        cp "$SHORTCUTS_FILE" "$backup_file"
+        print_success "Shortcuts exported to: $backup_file"
+        ;;
+        
+    "import")
+        if [[ -z "$2" || ! -f "$2" ]]; then
+            print_error "Usage: jump import <backup_file>"
+            exit 1
+        fi
+        cp "$2" "$SHORTCUTS_FILE"
+        print_success "Shortcuts imported from: $2"
+        ;;
+        
+    "version"|"--version"|"-v")
+        echo "Jump CLI v1.0.0"
+        echo "Enhanced Directory Shortcut Manager"
+        echo "https://github.com/amenophis1er/jump-cli"
+        ;;
+        
+    "help"|"--help"|"-h")
+        echo -e "${CYAN}Jump - Enhanced Directory Shortcut Manager${NC}"
+        echo ""
+        echo -e "${YELLOW}Basic Usage:${NC}"
+        echo "  jump <shortcut> [action]      - Jump to directory and optionally run action"
+        echo ""
+        echo -e "${YELLOW}Management:${NC}"
+        echo "  jump add <name> <path> [cmd]  - Add new shortcut with optional command"
+        echo "  jump update <name> <path>     - Update existing shortcut"
+        echo "  jump list                     - List all shortcuts"
+        echo "  jump search <query>           - Search shortcuts"
+        echo "  jump remove <name>            - Remove shortcut"
+        echo ""
+        echo -e "${YELLOW}Advanced:${NC}"
+        echo "  jump edit                     - Edit shortcuts file"
+        echo "  jump stats                    - Show usage statistics"
+        echo "  jump export [file]            - Export shortcuts to file"
+        echo "  jump import <file>            - Import shortcuts from file"
+        echo "  jump version                  - Show version information"
+        echo ""
+        echo -e "${YELLOW}Examples:${NC}"
+        echo "  jump add va ~/voice-agent 'source venv/bin/activate'"
+        echo "  jump va                       - Jump to voice-agent"
+        echo "  jump va run                   - Jump and run the stored action"
+        ;;
+        
+    "")
+        jump list
+        ;;
+        
+    *)
+        # Look for the shortcut
+        shortcut_line=$(get_shortcut "$1")
+        if [[ -n "$shortcut_line" ]]; then
+            parsed=$(parse_shortcut "$shortcut_line")
+            name=$(echo "$parsed" | cut -d'|' -f1)
+            path=$(echo "$parsed" | cut -d'|' -f2)
+            actions=$(echo "$parsed" | cut -d'|' -f3)
+            
+            # Check if user wants to run actions
+            if [[ "$2" == "run" || "$2" == "action" || "$2" == "do" ]] && [[ -n "$actions" ]]; then
+                echo "cd '$path' && $actions"
+            else
+                echo "cd '$path'"
+            fi
+        else
+            # Try fuzzy search
+            fuzzy_results=$(fuzzy_search "$1")
+            if [[ -n "$fuzzy_results" ]]; then
+                count=$(echo "$fuzzy_results" | wc -l)
+                if [[ $count -eq 1 ]]; then
+                    parsed=$(parse_shortcut "$fuzzy_results")
+                    path=$(echo "$parsed" | cut -d'|' -f2)
+                    echo "cd '$path'"
+                else
+                    print_warning "Multiple matches found for '$1':"
+                    echo "$fuzzy_results" | while IFS=':' read -r shortcut path actions; do
+                        printf "  ${GREEN}%s${NC} -> ${BLUE}%s${NC}\n" "$shortcut" "$path"
+                    done
+                    exit 1
+                fi
+            else
+                print_error "Shortcut '$1' not found. Use 'jump list' to see available shortcuts."
+                exit 1
+            fi
+        fi
+        ;;
+esac
