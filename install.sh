@@ -35,10 +35,18 @@ detect_shell() {
 
 # Get shell config file
 get_shell_config() {
-    local shell_type=$(detect_shell)
-    case $shell_type in
+    # Check actual user shell (not current execution shell)
+    local user_shell=$(basename "$SHELL")
+    
+    case $user_shell in
         "zsh")
-            echo "$HOME/.zshrc"
+            if [[ -f "$HOME/.zshrc" ]]; then
+                echo "$HOME/.zshrc"
+            else
+                # Create .zshrc if it doesn't exist for zsh users
+                touch "$HOME/.zshrc"
+                echo "$HOME/.zshrc"
+            fi
             ;;
         "bash")
             if [[ -f "$HOME/.bashrc" ]]; then
