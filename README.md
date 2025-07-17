@@ -39,12 +39,12 @@ chmod +x install.sh
 # Add shortcuts
 j add myproject ~/path/to/project
 j add web ~/Projects/Web 'ls -la'
-j add api ~/api-project 'source venv/bin/activate && echo "API env ready!"'
+j add server ~/server-project 'source venv/bin/activate && echo "Server env ready!"'
 
 # Jump to directories
 j myproject          # Jump to project
 j web               # Jump to web projects
-j api run           # Jump to API project AND run the stored action
+j server run        # Jump to server project AND run the stored action
 
 # List all shortcuts
 j list
@@ -88,10 +88,10 @@ j docs run          # Jump to docs AND start documentation server
 ### Project Management
 ```bash
 # Add project with git status check
-j add myrepo ~/code/myrepo 'git status && git pull'
+j add webapp ~/code/webapp 'git status && git pull'
 
 # Jump and automatically check status
-j myrepo run
+j webapp run
 ```
 
 ## How It Works
