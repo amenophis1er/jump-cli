@@ -64,6 +64,8 @@ case "$1" in
         
         shortcut=$2
         path=$(eval echo "$3")
+        # Convert to absolute path
+        path=$(cd "$path" && pwd)
         actions=${4:-""}
         
         if [[ ! -d "$path" ]]; then
@@ -90,6 +92,8 @@ case "$1" in
         
         shortcut=$2
         path=$(eval echo "$3")
+        # Convert to absolute path
+        path=$(cd "$path" && pwd)
         actions=${4:-""}
         
         if [[ ! -d "$path" ]]; then
