@@ -26,7 +26,7 @@ echo ""
 
 # Ask for confirmation
 read -p "Are you sure you want to uninstall Jump CLI? (y/N): " -n 1 -r
-echo
+echo ""
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     print_info "Uninstall cancelled."
     exit 0
