@@ -4,6 +4,12 @@
 
 Jump CLI is a powerful command-line tool that lets you create shortcuts to your frequently used directories with optional actions. Eliminate the need for typing long paths and enable instant navigation to your projects.
 
+## Requirements
+
+- **Shell**: Bash 4.0+ or Zsh
+- **OS**: macOS, Linux, or Windows (via WSL)
+- **Dependencies**: Standard Unix utilities (grep, cut, sed)
+
 ## Features
 
 - **Quick Navigation** - Jump to any directory with a simple shortcut
@@ -16,7 +22,17 @@ Jump CLI is a powerful command-line tool that lets you create shortcuts to your 
 
 ## Installation
 
-**One-liner installation:**
+### Quick Install (Recommended)
+
+**Install from latest stable release:**
+
+```bash
+curl -fsSL https://github.com/amenophis1er/jump-cli/releases/latest/download/install.sh | bash
+```
+
+### Alternative Installation Methods
+
+**Install from main branch (development version):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/install.sh | bash
@@ -31,43 +47,59 @@ chmod +x install.sh
 ./install.sh
 ```
 
-## Usage
-
-### Basic Commands
+## Quick Start
 
 ```bash
-# Add shortcuts
+# Add your first shortcut
 j add myproject ~/path/to/project
-j add web ~/Projects/Web 'ls -la'
-j add server ~/server-project 'source venv/bin/activate && echo "Server env ready!"'
 
-# Jump to directories
-j myproject          # Jump to project
-j web               # Jump to web projects
-j server run        # Jump to server project AND run the stored action
+# Jump to it
+j myproject
 
-# List all shortcuts
-j list
+# Add a shortcut with an action
+j add server ~/server 'source venv/bin/activate'
 
-# Search shortcuts
-j search web
-
-# Remove shortcuts
-j remove myproject
+# Jump and run the action
+j server run
 ```
 
-### Advanced Features
+## Command Reference
+
+### Navigation Commands
+- `j <name>` - Jump to directory
+- `j <name> run` - Jump to directory and execute stored action
+- `j <name> action` - Same as run
+- `j <name> do` - Same as run
+
+### Shortcut Management
+- `j add <name> <path> [action]` - Create a new shortcut
+- `j update <name> <path> [action]` - Update an existing shortcut
+- `j remove <name>` or `j rm <name>` - Delete a shortcut
+- `j list` or `j ls` - Display all shortcuts
+- `j search <query>` or `j find <query>` - Search shortcuts (fuzzy matching)
+
+### Advanced Commands
+- `j edit` - Open shortcuts file in default editor
+- `j stats` - Display usage statistics
+- `j export [filename]` - Export shortcuts to file (default: jump_shortcuts_backup.txt)
+- `j import <filename>` - Import shortcuts from file
+- `j help` or `j --help` or `j -h` - Show help
+- `j version` or `j --version` or `j -v` - Show version
+
+### Action Syntax
+
+Actions support any shell command. Use single quotes to prevent premature expansion:
 
 ```bash
-# Statistics and management
-j stats             # Show usage statistics
-j export            # Backup shortcuts
-j import backup.txt # Restore shortcuts
-j edit              # Edit shortcuts file directly
+# Single command
+j add myproject ~/project 'npm start'
 
-# Get help
-j help              # Show full help
-j version           # Show version info
+# Multiple commands (use semicolons or &&)
+j add fullstack ~/app 'cd frontend; npm start'
+j add server ~/backend 'source venv/bin/activate && python app.py'
+
+# Complex commands with pipes
+j add logs ~/logs 'tail -f app.log | grep ERROR'
 ```
 
 ## Examples
@@ -124,14 +156,18 @@ Virtual environment activated!
 
 ## Configuration
 
-Jump CLI works out of the box, but you can customize it:
+Jump CLI stores its data in:
+- `~/.jump_shortcuts` - Your shortcuts database
+- `~/.jump_config` - Configuration settings (reserved for future features)
 
+To manually edit shortcuts:
 ```bash
-# Edit shortcuts directly
-j edit
+j edit              # Opens in your default editor
+```
 
-# View configuration
-j config
+Shortcut format in the file:
+```
+name:path:action
 ```
 
 ## Uninstallation
@@ -139,12 +175,71 @@ j config
 To remove Jump CLI completely:
 
 ```bash
+# From latest release
+curl -fsSL https://github.com/amenophis1er/jump-cli/releases/latest/download/uninstall.sh | bash
+
+# Or from main branch
 curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/uninstall.sh | bash
 ```
 
+## Troubleshooting
+
+### Common Issues
+
+**"Command not found: j"**
+- Restart your terminal or run: `source ~/.bashrc` (or `~/.zshrc` for zsh)
+- Verify installation: `type j` should show the function definition
+- Check PATH: `echo $PATH` should include `~/bin`
+
+**"jump: command not found"**
+- Ensure `~/bin/jump` exists and is executable: `ls -la ~/bin/jump`
+- Reinstall if missing: `curl -fsSL https://github.com/amenophis1er/jump-cli/releases/latest/download/install.sh | bash`
+
+**Shortcuts not persisting**
+- Check file permissions: `ls -la ~/.jump_shortcuts`
+- Verify file isn't corrupted: `cat ~/.jump_shortcuts`
+
+**Actions not executing**
+- Use single quotes for complex commands: `j add project ~/project 'cd && npm start'`
+- Check action syntax: `j list` shows actions in brackets
+- Test action manually first to ensure it works
+
+**Fuzzy search not working**
+- Fuzzy search is automatic when exact match isn't found
+- Search command uses grep patterns: `j search "web.*app"`
+
+### Shell Compatibility
+
+**Bash**
+- Fully supported (4.0+)
+- Works with `.bashrc` or `.bash_profile`
+
+**Zsh**
+- Fully supported
+- Works with `.zshrc`
+
+**Other Shells**
+- Basic support via `.profile`
+- Some features may be limited
+
+## Platform Notes
+
+### macOS
+- Works with Terminal, iTerm2, and other terminal emulators
+- Tested on macOS 10.15+
+
+### Linux
+- Compatible with all major distributions
+- Tested on Ubuntu, Debian, Fedora, Arch
+
+### Windows
+- Requires WSL (Windows Subsystem for Linux)
+- Not compatible with Command Prompt or PowerShell
+- Use WSL terminal for full functionality
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)

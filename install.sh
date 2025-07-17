@@ -75,14 +75,44 @@ if [[ ! -d "$BIN_DIR" ]]; then
     print_success "Created $BIN_DIR directory"
 fi
 
-# Copy the jump script
+# Download jump script from latest release or use local if available
 if [[ -f "jump" ]]; then
+    # Local installation (for development)
     cp jump "$BIN_DIR/jump"
     chmod +x "$BIN_DIR/jump"
-    print_success "Installed jump script to $BIN_DIR/jump"
+    print_success "Installed jump script from local directory to $BIN_DIR/jump"
 else
-    print_error "jump script not found in current directory"
-    exit 1
+    # Download from GitHub release
+    print_info "Downloading Jump CLI from latest release..."
+    
+    # Get the latest release download URL
+    LATEST_URL="https://api.github.com/repos/amenophis1er/jump-cli/releases/latest"
+    DOWNLOAD_URL="https://github.com/amenophis1er/jump-cli/releases/latest/download/jump"
+    
+    # Download the jump script
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "$DOWNLOAD_URL" -o "$BIN_DIR/jump" || {
+            print_error "Failed to download jump script. Falling back to main branch..."
+            curl -fsSL "https://raw.githubusercontent.com/amenophis1er/jump-cli/main/jump" -o "$BIN_DIR/jump" || {
+                print_error "Failed to download jump script from main branch"
+                exit 1
+            }
+        }
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q "$DOWNLOAD_URL" -O "$BIN_DIR/jump" || {
+            print_error "Failed to download jump script. Falling back to main branch..."
+            wget -q "https://raw.githubusercontent.com/amenophis1er/jump-cli/main/jump" -O "$BIN_DIR/jump" || {
+                print_error "Failed to download jump script from main branch"
+                exit 1
+            }
+        }
+    else
+        print_error "Neither curl nor wget found. Please install one of them."
+        exit 1
+    fi
+    
+    chmod +x "$BIN_DIR/jump"
+    print_success "Downloaded and installed jump script to $BIN_DIR/jump"
 fi
 
 # Get shell config file

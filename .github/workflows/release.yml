@@ -19,6 +19,10 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         name: Jump CLI ${{ github.ref_name }}
+        files: |
+          jump
+          install.sh
+          uninstall.sh
         body: |
           ## Jump CLI ${{ github.ref_name }}
           
@@ -26,9 +30,9 @@ jobs:
           
           ## Installation
           
-          **One-liner install:**
+          **One-liner install (recommended - uses this release):**
           ```bash
-          curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/install.sh | bash
+          curl -fsSL https://github.com/amenophis1er/jump-cli/releases/latest/download/install.sh | bash
           ```
           
           **Manual install:**
