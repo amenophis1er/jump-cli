@@ -1,20 +1,20 @@
-# Jump CLI 🚀
+# Jump CLI
 
-**Enhanced Directory Shortcut Manager** - Navigate your projects like a pro!
+**Enhanced Directory Shortcut Manager** - Navigate your projects efficiently.
 
-Jump CLI is a powerful command-line tool that lets you create shortcuts to your frequently used directories with optional actions. Say goodbye to typing long paths and hello to instant navigation!
+Jump CLI is a powerful command-line tool that lets you create shortcuts to your frequently used directories with optional actions. Eliminate the need for typing long paths and enable instant navigation to your projects.
 
-## ✨ Features
+## Features
 
-- 🎯 **Quick Navigation** - Jump to any directory with a simple shortcut
-- ⚡ **Custom Actions** - Run commands automatically when jumping (activate venv, git status, etc.)
-- 🔍 **Fuzzy Search** - Find shortcuts even with partial names
-- 🎨 **Colored Output** - Beautiful, readable terminal output
-- 📊 **Statistics** - Track your shortcuts usage
-- 💾 **Backup/Restore** - Export and import your shortcuts
-- 🔧 **Easy Management** - Add, update, remove shortcuts effortlessly
+- **Quick Navigation** - Jump to any directory with a simple shortcut
+- **Custom Actions** - Run commands automatically when jumping (activate venv, git status, etc.)
+- **Fuzzy Search** - Find shortcuts even with partial names
+- **Colored Output** - Clear, readable terminal output
+- **Statistics** - Track your shortcuts usage
+- **Backup/Restore** - Export and import your shortcuts
+- **Easy Management** - Add, update, remove shortcuts effortlessly
 
-## 🚀 Quick Install
+## Installation
 
 **One-liner installation:**
 
@@ -22,7 +22,7 @@ Jump CLI is a powerful command-line tool that lets you create shortcuts to your 
 curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/install.sh | bash
 ```
 
-**Or manual installation:**
+**Manual installation:**
 
 ```bash
 git clone https://github.com/amenophis1er/jump-cli.git
@@ -31,7 +31,7 @@ chmod +x install.sh
 ./install.sh
 ```
 
-## 📖 Usage
+## Usage
 
 ### Basic Commands
 
@@ -70,7 +70,7 @@ j help              # Show full help
 j version           # Show version info
 ```
 
-## 💡 Examples
+## Examples
 
 ### Development Workflow
 ```bash
@@ -94,7 +94,7 @@ j add myrepo ~/code/myrepo 'git status && git pull'
 j myrepo run
 ```
 
-## 🛠️ How It Works
+## How It Works
 
 Jump CLI creates two simple files:
 - `~/.jump_shortcuts` - Your shortcuts database
@@ -105,7 +105,7 @@ The `j` command is a shell function that:
 2. Changes directories seamlessly
 3. Executes optional actions when requested
 
-## 🎨 Screenshots
+## Output Example
 
 ```
 $ j list
@@ -122,7 +122,7 @@ $ j backend run
 Virtual environment activated!
 ```
 
-## 🔧 Configuration
+## Configuration
 
 Jump CLI works out of the box, but you can customize it:
 
@@ -134,7 +134,15 @@ j edit
 j config
 ```
 
-## 🤝 Contributing
+## Uninstallation
+
+To remove Jump CLI completely:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/uninstall.sh | bash
+```
+
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -144,24 +152,18 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Support
 
-- Inspired by the need for faster project navigation
-- Built for developers who love efficiency
-- Designed with simplicity and power in mind
-
-## 📞 Support
-
-- 🐛 **Issues**: [GitHub Issues](https://github.com/amenophis1er/jump-cli/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/amenophis1er/jump-cli/discussions)
-- 📧 **Email**: jump-cli@amouzou.net
+- **Issues**: [GitHub Issues](https://github.com/amenophis1er/jump-cli/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/amenophis1er/jump-cli/discussions)
+- **Email**: jump-cli@amouzou.net
 
 ---
 
-**Made with ❤️ by [Amen AMOUZOU](https://github.com/amenophis1er)**
+**Author**: [Amen AMOUZOU](https://github.com/amenophis1er)
 
-⭐ **Star this repo if you find it useful!**
+**Repository**: https://github.com/amenophis1er/jump-cli

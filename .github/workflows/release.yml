@@ -20,11 +20,11 @@ jobs:
       with:
         name: Jump CLI ${{ github.ref_name }}
         body: |
-          ## 🚀 Jump CLI ${{ github.ref_name }}
+          ## Jump CLI ${{ github.ref_name }}
           
-          Enhanced Directory Shortcut Manager - Navigate your projects like a pro!
+          Enhanced Directory Shortcut Manager - Navigate your projects efficiently.
           
-          ## 📦 Installation
+          ## Installation
           
           **One-liner install:**
           ```bash
@@ -38,15 +38,15 @@ jobs:
           ./install.sh
           ```
           
-          ## ✨ Features
-          - 🎯 Quick navigation with shortcuts
-          - ⚡ Custom actions per shortcut
-          - 🔍 Fuzzy search capabilities
-          - 🎨 Colored terminal output
-          - 📊 Usage statistics
-          - 💾 Backup/restore functionality
+          ## Features
+          - Quick navigation with shortcuts
+          - Custom actions per shortcut
+          - Fuzzy search capabilities
+          - Colored terminal output
+          - Usage statistics
+          - Backup/restore functionality
           
-          ## 📖 Quick Start
+          ## Quick Start
           ```bash
           # Add shortcuts
           j add myproject ~/path/to/project
@@ -60,8 +60,6 @@ jobs:
           j list       # Show all shortcuts
           j help       # Full documentation
           ```
-          
-          ---
           
           **Full documentation:** https://github.com/amenophis1er/jump-cli#readme
         draft: false
