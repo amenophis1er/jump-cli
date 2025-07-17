@@ -19,6 +19,7 @@ Jump CLI is a powerful command-line tool that lets you create shortcuts to your 
 - **Statistics** - Track your shortcuts usage
 - **Backup/Restore** - Export and import your shortcuts
 - **Easy Management** - Add, update, remove shortcuts effortlessly
+- **Auto-completion** - Tab completion for commands, shortcuts, and file paths
 
 ## Installation
 
@@ -169,6 +170,28 @@ Shortcut format in the file:
 ```
 name:path:action
 ```
+
+## Auto-completion
+
+Jump CLI includes comprehensive tab completion for both bash and zsh:
+
+### What gets completed:
+- **Commands**: `j <TAB>` shows all commands (add, remove, list, etc.) + your shortcuts
+- **Shortcuts**: Available shortcuts complete automatically in relevant contexts
+- **Directories**: When adding/updating shortcuts, `j add name <TAB>` completes directory paths
+- **Action keywords**: `j myshortcut <TAB>` suggests `run`, `action`, `do`
+- **Files**: `j import <TAB>` and `j export <TAB>` complete file paths
+
+### Examples:
+```bash
+j <TAB>                    # Shows: add remove list ... myproject webapp docs
+j remove <TAB>             # Shows: myproject webapp docs
+j add newproj <TAB>        # Shows: available directories
+j myproject <TAB>          # Shows: run action do
+j export <TAB>             # Shows: *.txt files or suggests backup.txt
+```
+
+Auto-completion is automatically installed and works immediately after installation.
 
 ## Uninstallation
 

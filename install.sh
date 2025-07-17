@@ -135,7 +135,7 @@ if ! echo "$PATH" | grep -q "$HOME/bin"; then
     print_success "Added ~/bin to PATH in $SHELL_CONFIG"
 fi
 
-# Add shell function
+# Add shell function and completion
 SHELL_FUNCTION='
 # Jump CLI - Shell Integration
 j() {
@@ -165,7 +165,149 @@ j() {
     else
         echo "$result"
     fi
-}'
+}
+
+# Jump CLI - Auto-completion
+_jump_complete() {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local cmd="${COMP_WORDS[1]}"
+    
+    # Get shortcuts dynamically
+    local shortcuts=""
+    if [[ -f "$HOME/.jump_shortcuts" ]]; then
+        shortcuts=$(cut -d: -f1 "$HOME/.jump_shortcuts" 2>/dev/null | tr '\''\n'\'' '\'' '\'' | xargs)
+    fi
+    
+    # If first argument, complete with commands + shortcuts
+    if [[ $COMP_CWORD -eq 1 ]]; then
+        local commands="add update remove rm list ls search find edit stats export import help version"
+        COMPREPLY=($(compgen -W "$commands $shortcuts" -- "$cur"))
+        return
+    fi
+    
+    # If second argument and first is a shortcut, complete with action keywords
+    if [[ $COMP_CWORD -eq 2 && " $shortcuts " =~ " $cmd " ]]; then
+        COMPREPLY=($(compgen -W "run action do" -- "$cur"))
+        return
+    fi
+    
+    # Command-specific completion
+    case "$cmd" in
+        "add"|"update")
+            case "$COMP_CWORD" in
+                2) # Shortcut name - no completion
+                   COMPREPLY=()
+                   ;;
+                3) # Directory path
+                   COMPREPLY=($(compgen -d -- "$cur"))
+                   ;;
+                *) # Actions - no completion
+                   COMPREPLY=()
+                   ;;
+            esac
+            ;;
+        "remove"|"rm")
+            # Complete with existing shortcuts
+            COMPREPLY=($(compgen -W "$shortcuts" -- "$cur"))
+            ;;
+        "search"|"find")
+            # Complete with existing shortcuts for search hints
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                COMPREPLY=($(compgen -W "$shortcuts" -- "$cur"))
+            fi
+            ;;
+        "import")
+            # Complete with files
+            COMPREPLY=($(compgen -f -- "$cur"))
+            ;;
+        "export")
+            # Complete with .txt files and allow custom naming
+            COMPREPLY=($(compgen -f -X '\''!*.txt'\'' -- "$cur"))
+            if [[ ${#COMPREPLY[@]} -eq 0 ]]; then
+                COMPREPLY=($(compgen -W "backup.txt jump_backup.txt" -- "$cur"))
+            fi
+            ;;
+        *)
+            COMPREPLY=()
+            ;;
+    esac
+}
+
+# Register completion for bash
+if [[ -n "$BASH_VERSION" ]]; then
+    complete -F _jump_complete j
+fi
+
+# Zsh completion support
+if [[ -n "$ZSH_VERSION" ]]; then
+    # Enable zsh completion system
+    autoload -U compinit
+    compinit
+    
+    # Define zsh completion function
+    _jump_zsh_complete() {
+        local context curcontext="$curcontext" state line
+        local shortcuts=""
+        
+        # Get shortcuts dynamically
+        if [[ -f "$HOME/.jump_shortcuts" ]]; then
+            shortcuts=(${(f)"$(cut -d: -f1 "$HOME/.jump_shortcuts" 2>/dev/null)"})
+        fi
+        
+        _arguments -C \
+            '\''1: :->first_arg'\'' \
+            '\''2: :->second_arg'\'' \
+            '\''*: :->other_args'\'' && return 0
+        
+        case $state in
+            first_arg)
+                local commands=(add update remove rm list ls search find edit stats export import help version)
+                _alternative \
+                    '\''commands:commands:($commands)'\'' \
+                    '\''shortcuts:shortcuts:($shortcuts)'\''
+                ;;
+            second_arg)
+                case $words[2] in
+                    add|update)
+                        _message '\''shortcut name'\''
+                        ;;
+                    remove|rm)
+                        _alternative '\''shortcuts:shortcuts:($shortcuts)'\''
+                        ;;
+                    search|find)
+                        _alternative '\''shortcuts:shortcuts:($shortcuts)'\''
+                        ;;
+                    import)
+                        _files
+                        ;;
+                    export)
+                        _files -g '\''*.txt'\''
+                        ;;
+                    *)
+                        if [[ " ${shortcuts[@]} " =~ " ${words[2]} " ]]; then
+                            _alternative '\''actions:actions:(run action do)'\''
+                        fi
+                        ;;
+                esac
+                ;;
+            other_args)
+                case $words[2] in
+                    add|update)
+                        if [[ $CURRENT -eq 3 ]]; then
+                            _directories
+                        else
+                            _message '\''action commands'\''
+                        fi
+                        ;;
+                esac
+                ;;
+        esac
+    }
+    
+    # Register zsh completion
+    compdef _jump_zsh_complete j
+fi'
 
 # Check if function already exists
 if ! grep -q "# Jump CLI - Shell Integration" "$SHELL_CONFIG" 2>/dev/null; then
