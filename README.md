@@ -172,15 +172,23 @@ name:path:action
 
 ## Uninstallation
 
-To remove Jump CLI completely:
+### Recommended Method (Interactive)
 
 ```bash
-# From latest release
-curl -fsSL https://github.com/amenophis1er/jump-cli/releases/latest/download/uninstall.sh | bash
-
-# Or from main branch
-curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/uninstall.sh | bash
+# Download and run (allows inspection before execution)
+curl -fsSLO https://github.com/amenophis1er/jump-cli/releases/latest/download/uninstall.sh
+bash uninstall.sh
+rm uninstall.sh
 ```
+
+### Quick Method (Non-interactive)
+
+```bash
+# Process substitution method (works with interactive scripts)
+bash <(curl -fsSL https://github.com/amenophis1er/jump-cli/releases/latest/download/uninstall.sh)
+```
+
+**Note**: Avoid `curl | bash` for the uninstaller as it interferes with interactive prompts.
 
 ## Troubleshooting
 
@@ -203,6 +211,11 @@ curl -fsSL https://raw.githubusercontent.com/amenophis1er/jump-cli/main/uninstal
 - Use single quotes for complex commands: `j add project ~/project 'cd && npm start'`
 - Check action syntax: `j list` shows actions in brackets
 - Test action manually first to ensure it works
+
+**Uninstaller fails with "cho: command not found"**
+- Don't use `curl | bash` for the uninstaller (interferes with interactive prompts)
+- Use process substitution instead: `bash <(curl -fsSL ...)`
+- Or download first then run: `curl -fsSLO ... && bash uninstall.sh`
 
 **Fuzzy search not working**
 - Fuzzy search is automatic when exact match isn't found
