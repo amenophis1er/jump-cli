@@ -112,8 +112,8 @@ case "$1" in
         
         shortcut=$2
         path=$(eval echo "$3")
-        # Convert to absolute path
-        path=$(cd "$path" && pwd)
+        # Convert to absolute path and resolve symlinks
+        path=$(cd "$path" && pwd -P)
         actions=${4:-""}
         
         if [[ ! -d "$path" ]]; then
@@ -127,7 +127,10 @@ case "$1" in
             exit 1
         fi
         
-        echo "$shortcut:$path:$actions" >> "$SHORTCUTS_FILE"
+        if ! echo "$shortcut:$path:$actions" >> "$SHORTCUTS_FILE" 2>/dev/null; then
+            print_error "Failed to write to shortcuts file. Check file permissions."
+            exit 1
+        fi
         
         print_success "Shortcut created successfully"
         echo ""
@@ -155,8 +158,8 @@ case "$1" in
         
         shortcut=$2
         path=$(eval echo "$3")
-        # Convert to absolute path
-        path=$(cd "$path" && pwd)
+        # Convert to absolute path and resolve symlinks
+        path=$(cd "$path" && pwd -P)
         actions=${4:-""}
         
         if [[ ! -d "$path" ]]; then
@@ -170,9 +173,14 @@ case "$1" in
         fi
         
         # Remove old entry and add new one
-        grep -v "^$shortcut:" "$SHORTCUTS_FILE" > "${SHORTCUTS_FILE}.tmp"
-        echo "$shortcut:$path:$actions" >> "${SHORTCUTS_FILE}.tmp"
-        mv "${SHORTCUTS_FILE}.tmp" "$SHORTCUTS_FILE"
+        # grep -v may return 1 if no lines remain, which is OK
+        grep -v "^$shortcut:" "$SHORTCUTS_FILE" > "${SHORTCUTS_FILE}.tmp" 2>/dev/null || true
+        if ! echo "$shortcut:$path:$actions" >> "${SHORTCUTS_FILE}.tmp" 2>/dev/null || \
+           ! mv "${SHORTCUTS_FILE}.tmp" "$SHORTCUTS_FILE" 2>/dev/null; then
+            print_error "Failed to update shortcuts file. Check file permissions."
+            rm -f "${SHORTCUTS_FILE}.tmp"
+            exit 1
+        fi
         
         print_success "Shortcut updated successfully"
         echo ""
@@ -289,8 +297,13 @@ case "$1" in
         fi
         
         if get_shortcut "$2" >/dev/null; then
-            grep -v "^$2:" "$SHORTCUTS_FILE" > "${SHORTCUTS_FILE}.tmp"
-            mv "${SHORTCUTS_FILE}.tmp" "$SHORTCUTS_FILE"
+            # Remove the shortcut (grep -v may return 1 if no lines remain, which is OK)
+            grep -v "^$2:" "$SHORTCUTS_FILE" > "${SHORTCUTS_FILE}.tmp" 2>/dev/null || true
+            if ! mv "${SHORTCUTS_FILE}.tmp" "$SHORTCUTS_FILE" 2>/dev/null; then
+                print_error "Failed to update shortcuts file. Check file permissions."
+                rm -f "${SHORTCUTS_FILE}.tmp"
+                exit 1
+            fi
             print_success "Removed shortcut '$2'"
         else
             print_box_start "Jump CLI - Remove Shortcut"
@@ -309,6 +322,7 @@ case "$1" in
                 print_section "No shortcuts exist to remove."
                 print_tip "Create shortcuts with 'j add <name> <path>'"
             fi
+            exit 1
         fi
         ;;
         
