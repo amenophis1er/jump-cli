@@ -175,6 +175,28 @@ j() {
         return
     fi
     
+    # Check if it'\''s a discovered directory that starts with colon
+    if [[ "$1" == :* ]]; then
+        # Strip the colon prefix and look up the directory
+        local dir_name="${1#:}"
+        if [[ -f "$HOME/bin/enhanced_completion.sh" ]]; then
+            source "$HOME/bin/enhanced_completion.sh"
+            # Look up the full path in cache
+            local full_path=$(grep "/$dir_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+            if [[ -n "$full_path" ]] && [[ -d "$full_path" ]]; then
+                printf "${CYAN}→${NC} ${BOLD}%s${NC} ${DIM}(discovered)${NC}\n" "$dir_name" >&2
+                cd "$full_path"
+                return
+            else
+                printf "${RED}✗ Directory '%s' not found in cache${NC}\n" "$dir_name" >&2
+                return 1
+            fi
+        else
+            printf "${RED}✗ Enhanced completion not available${NC}\n" >&2
+            return 1
+        fi
+    fi
+    
     # For shortcuts, execute the cd command with enhanced output
     # Check if user wants verbose output
     if [[ "$2" == "--verbose" || "$2" == "-v" ]]; then
@@ -186,6 +208,34 @@ j() {
     if [[ $result == cd* ]]; then
         eval "$result"
     else
+        # If shortcut not found, try smart directory discovery
+        if [[ -f "$HOME/bin/enhanced_completion.sh" ]]; then
+            source "$HOME/bin/enhanced_completion.sh"
+            local discovered_dirs=($(find_smart_directories "$1" 2>/dev/null))
+            
+            if [[ ${#discovered_dirs[@]} -eq 1 ]]; then
+                # Found exactly one match, navigate to it
+                local dir_name="${discovered_dirs[0]#:}"  # Strip colon prefix if present
+                local full_path=$(grep "/$dir_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+                if [[ -n "$full_path" ]] && [[ -d "$full_path" ]]; then
+                    printf "${CYAN}→${NC} ${BOLD}%s${NC} ${DIM}(discovered)${NC}\n" "$dir_name" >&2
+                    cd "$full_path"
+                    return
+                fi
+            elif [[ ${#discovered_dirs[@]} -gt 1 ]]; then
+                # Multiple matches found, show options
+                printf "${YELLOW}Multiple directories found for '%s':${NC}\n" "$1" >&2
+                for dir_name in "${discovered_dirs[@]}"; do
+                    local clean_name="${dir_name#:}"  # Strip colon prefix if present
+                    local full_path=$(grep "/$clean_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+                    printf "  ${GREEN}%s${NC} -> ${BLUE}%s${NC}\n" "$dir_name" "$full_path" >&2
+                done
+                printf "${DIM}Tip: Use exact name or create a shortcut with '\''j add'\''${NC}\n" >&2
+                return 1
+            fi
+        fi
+        
+        # No smart discovery or no matches found, show original error
         echo "$result"
     fi
 }

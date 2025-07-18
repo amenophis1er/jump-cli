@@ -474,6 +474,25 @@ case "$1" in
         ;;
         
     *)
+        # Check if it's a discovered directory with colon prefix
+        if [[ "$1" == :* ]]; then
+            # Strip the colon prefix and look up the directory
+            dir_name="${1#:}"
+            if [[ -f "$HOME/.jump_directory_cache" ]]; then
+                full_path=$(grep "/$dir_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+                if [[ -n "$full_path" ]] && [[ -d "$full_path" ]]; then
+                    echo "cd '$full_path'"
+                    exit 0
+                else
+                    print_error "Directory '$dir_name' not found in cache"
+                    exit 1
+                fi
+            else
+                print_error "Enhanced completion cache not available"
+                exit 1
+            fi
+        fi
+        
         # Look for the shortcut
         shortcut_line=$(get_shortcut "$1")
         if [[ -n "$shortcut_line" ]]; then

@@ -119,7 +119,8 @@ find_smart_directories() {
     printf '%s\n' "${scored_results[@]}" | \
         sort -t: -k1,1nr | \
         head -n "$JUMP_MAX_COMPLETIONS" | \
-        cut -d: -f2
+        cut -d: -f2 | \
+        sed 's/^/:/'
 }
 
 # Enhanced completion function
