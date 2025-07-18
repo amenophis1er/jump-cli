@@ -135,12 +135,8 @@ teardown() {
     
     run jump_cmd --format-jump webapp
     assert_status_success
-    assert_output_contains "Jumped to:"
     assert_output_contains "webapp"
-    assert_output_contains "Projects/web-app"
-    assert_output_contains "Available actions:"
-    assert_output_contains "npm start"
-    assert_output_contains "j webapp run"
+    assert_output_contains "cd \""
 }
 
 @test "jump: formats output correctly for shortcut without actions" {
@@ -148,12 +144,21 @@ teardown() {
     
     run jump_cmd --format-jump webapp
     assert_status_success
+    assert_output_contains "webapp"
+    assert_output_contains "cd \""
+}
+
+@test "jump: verbose format shows detailed information" {
+    create_test_shortcut "webapp" "$TEST_HOME/Projects/web-app" "npm start"
+    
+    run jump_cmd --format-jump-verbose webapp
+    assert_status_success
     assert_output_contains "Jumped to:"
     assert_output_contains "webapp"
     assert_output_contains "Projects/web-app"
     assert_output_contains "Available actions:"
-    assert_output_contains "(none set)"
-    assert_output_contains "j update webapp"
+    assert_output_contains "npm start"
+    assert_output_contains "cd \""
 }
 
 @test "jump: handles non-existent shortcut gracefully" {

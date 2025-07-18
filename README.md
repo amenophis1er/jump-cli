@@ -13,6 +13,7 @@ Jump CLI is a powerful command-line tool that lets you create shortcuts to your 
 ## Features
 
 - **Quick Navigation** - Jump to any directory with a simple shortcut
+- **Smart Tab Completion** - Intelligent directory discovery with fuzzy matching
 - **Custom Actions** - Run commands automatically when jumping (activate venv, git status, etc.)
 - **Fuzzy Search** - Find shortcuts even with partial names
 - **Colored Output** - Clear, readable terminal output
@@ -56,6 +57,10 @@ j add myproject ~/path/to/project
 
 # Jump to it
 j myproject
+
+# NEW: Discover directories with smart tab completion
+j voice<TAB>           # Suggests voice-related directories
+j react<TAB>           # Suggests React projects
 
 # Add a shortcut with an action
 j add server ~/server 'source venv/bin/activate'
@@ -171,27 +176,75 @@ Shortcut format in the file:
 name:path:action
 ```
 
-## Auto-completion
+## Smart Tab Completion
 
-Jump CLI includes comprehensive tab completion for both bash and zsh:
+Jump CLI features **intelligent tab completion** that goes beyond basic command completion. It can discover and suggest directories even without predefined shortcuts!
 
-### What gets completed:
-- **Commands**: `j <TAB>` shows all commands (add, remove, list, etc.) + your shortcuts
-- **Shortcuts**: Available shortcuts complete automatically in relevant contexts
-- **Directories**: When adding/updating shortcuts, `j add name <TAB>` completes directory paths
-- **Action keywords**: `j myshortcut <TAB>` suggests `run`, `action`, `do`
-- **Files**: `j import <TAB>` and `j export <TAB>` complete file paths
+### What's New: Smart Directory Discovery
 
-### Examples:
+The enhanced completion system intelligently discovers directories from common project locations:
+
 ```bash
-j <TAB>                    # Shows: add remove list ... myproject webapp docs
+j voice<TAB>        # Suggests: voice-assistant, voice-chat, mobile-voice
+j backend<TAB>      # Suggests: backend-api, backend-service, api-backend  
+j react<TAB>        # Suggests: react-app, my-react-project, react-components
+j docker<TAB>       # Suggests: docker-setup, app-docker, docker-configs
+```
+
+**How it works:**
+- **Scans common project directories**: `~/Projects`, `~/Code`, `~/src`, `~/workspace`, `~/Documents`
+- **Intelligent ranking**: Exact matches → Prefix matches → Contains → Fuzzy matches
+- **Performance optimized**: Cached results, 2-second timeout protection
+- **Location bonuses**: Prioritizes directories in `~/Projects` and `~/Code`
+- **Recent access bonus**: Recently modified directories rank higher
+
+### Traditional Completion Features
+
+All existing completion features are enhanced and preserved:
+
+- **Commands**: `j <TAB>` shows all commands (add, remove, list, etc.) + your shortcuts
+- **Shortcuts**: Available shortcuts complete automatically in relevant contexts  
+- **Smart Directories**: Discovers project directories without predefined shortcuts
+- **Action keywords**: `j myshortcut <TAB>` suggests `run`, `action`, `do`
+- **File paths**: `j import <TAB>` and `j export <TAB>` complete file paths
+
+### Completion Examples
+
+```bash
+# Directory Discovery (NEW!)
+j voice<TAB>               # Discovers: voice-assistant, voice-chat, mobile-voice
+j api<TAB>                 # Discovers: api-server, user-api, payment-api
+
+# Command Completion  
+j <TAB>                    # Shows: add remove list ... + shortcuts + discoveries
 j remove <TAB>             # Shows: myproject webapp docs
-j add newproj <TAB>        # Shows: available directories
+j add newproj <TAB>        # Shows: directories + smart discoveries
+
+# Action Completion
 j myproject <TAB>          # Shows: run action do
 j export <TAB>             # Shows: *.txt files or suggests backup.txt
 ```
 
-Auto-completion is automatically installed and works immediately after installation.
+### Smart Features
+
+**Intelligent Ranking:**
+- **Exact match**: `voice` matches `voice` (highest priority)
+- **Prefix match**: `voice` matches `voice-assistant`
+- **Contains match**: `voice` matches `mobile-voice`  
+- **Fuzzy match**: `va` matches `voice-assistant`
+
+**Performance Features:**
+- **Background caching**: Updates every hour without blocking completion
+- **Smart exclusions**: Ignores `node_modules`, `.git`, `build`, `dist` directories
+- **Timeout protection**: Never hangs your terminal
+- **Result limiting**: Shows top 10 matches for fast completion
+
+**Cross-Platform Support:**
+- **Bash 4.0+**: Full support with enhanced completion
+- **Zsh**: Native zsh completion with smart discovery  
+- **Older bash**: Falls back to basic completion gracefully
+
+Smart completion is automatically installed and works immediately after installation - no configuration needed!
 
 ## Uninstallation
 

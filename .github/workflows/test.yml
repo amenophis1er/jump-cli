@@ -56,6 +56,12 @@ jobs:
     - name: Run shell integration tests
       run: bats tests/test_shell_integration.bats
       
+    - name: Run enhanced completion tests
+      run: bats tests/test_enhanced_completion.bats
+      
+    - name: Run cache manager tests
+      run: bats tests/test_cache_manager.bats
+      
     - name: Test installation process
       run: |
         # Test installation
@@ -98,6 +104,12 @@ jobs:
         # SC2155: declare and assign (acceptable pattern)
         # SC2129: redirect style (acceptable pattern)
         # SC1090: dynamic source (our usage is safe and intentional)
-        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090 jump
-        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090 install.sh
-        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090 uninstall.sh
+        # SC2012: ls usage (acceptable in our case for file size)
+        # SC2076: regex patterns (some literal matching is intentional)
+        # SC2207: compgen arrays (standard bash completion pattern)
+        # SC2001: sed usage (needed for fuzzy matching pattern generation)
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090,SC2012,SC2076,SC2207,SC2001 jump
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090,SC2012,SC2076,SC2207,SC2001 install.sh
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090,SC2012,SC2076,SC2207,SC2001 uninstall.sh
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090,SC2012,SC2076,SC2207,SC2001 enhanced_completion.sh
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129,SC1090,SC2012,SC2076,SC2207,SC2001 cache_manager.sh

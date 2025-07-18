@@ -406,15 +406,34 @@ case "$1" in
         shortcut_info=$(get_shortcut "$2")
         if [[ -n "$shortcut_info" ]]; then
             IFS=':' read -r name path actions <<< "$shortcut_info"
-            printf "$(print_success "Jumped to:") $(print_highlight "%s")\n" "$name"
-            printf "   $(print_path "%s")\n" "$path"
-            echo ""
+            # Minimal output for daily usage - just show where we're going
+            printf "${CYAN}→${NC} ${BOLD}%s${NC}\n" "$name" >&2
+            echo "cd \"$path\""
+        else
+            echo "cd \"$PWD\""
+        fi
+        ;;
+        
+    "--format-jump-verbose")
+        # Verbose output for when users want detailed information
+        if [[ -z "$2" ]]; then
+            echo "cd \"$PWD\""
+            exit 0
+        fi
+        
+        shortcut_info=$(get_shortcut "$2")
+        if [[ -n "$shortcut_info" ]]; then
+            IFS=':' read -r name path actions <<< "$shortcut_info"
+            # Detailed output with all information
+            printf "$(print_success "Jumped to:") $(print_highlight "%s")\n" "$name" >&2
+            printf "   $(print_path "%s")\n" "$path" >&2
+            echo "" >&2
             if [[ -n "$actions" ]]; then
-                printf "$(print_section "Available actions:") $(print_dim "%s")\n" "$actions"
-                print_tip "Run 'j $name run' to execute actions"
+                printf "$(print_section "Available actions:") $(print_dim "%s")\n" "$actions" >&2
+                print_tip "Run 'j $name run' to execute actions" >&2
             else
-                printf "$(print_dim "Available actions:") $(print_dim "%s")\n" "(none set)"
-                print_tip "Add actions with 'j update $name $path \"your command\"'"
+                printf "$(print_dim "Available actions:") $(print_dim "%s")\n" "(none set)" >&2
+                print_tip "Add actions with 'j update $name $path \"your command\"'" >&2
             fi
             echo "cd \"$path\""
         else
@@ -427,6 +446,8 @@ case "$1" in
         echo ""
         echo -e "${YELLOW}Basic Usage:${NC}"
         echo "  jump <shortcut> [action]      - Jump to directory and optionally run action"
+        echo "  j <shortcut>                  - Quick navigation (minimal output)"
+        echo "  j <shortcut> --verbose        - Show detailed jump information"
         echo ""
         echo -e "${YELLOW}Management:${NC}"
         echo "  jump add <name> <path> [cmd]  - Add new shortcut with optional command"
@@ -453,6 +474,25 @@ case "$1" in
         ;;
         
     *)
+        # Check if it's a discovered directory with colon prefix
+        if [[ "$1" == :* ]]; then
+            # Strip the colon prefix and look up the directory
+            dir_name="${1#:}"
+            if [[ -f "$HOME/.jump_directory_cache" ]]; then
+                full_path=$(grep "/$dir_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+                if [[ -n "$full_path" ]] && [[ -d "$full_path" ]]; then
+                    echo "cd '$full_path'"
+                    exit 0
+                else
+                    print_error "Directory '$dir_name' not found in cache"
+                    exit 1
+                fi
+            else
+                print_error "Enhanced completion cache not available"
+                exit 1
+            fi
+        fi
+        
         # Look for the shortcut
         shortcut_line=$(get_shortcut "$1")
         if [[ -n "$shortcut_line" ]]; then

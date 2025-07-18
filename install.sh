@@ -89,6 +89,19 @@ if [[ -f "jump" ]]; then
     cp jump "$BIN_DIR/jump"
     chmod +x "$BIN_DIR/jump"
     print_success "Installed jump script from local directory to $BIN_DIR/jump"
+    
+    # Also install enhanced completion script if available
+    if [[ -f "enhanced_completion.sh" ]]; then
+        cp "enhanced_completion.sh" "$BIN_DIR/"
+        print_success "Installed enhanced completion script"
+    fi
+    
+    # Install cache manager script if available  
+    if [[ -f "cache_manager.sh" ]]; then
+        cp "cache_manager.sh" "$BIN_DIR/"
+        chmod +x "$BIN_DIR/cache_manager.sh"
+        print_success "Installed cache manager script"
+    fi
 else
     # Download from GitHub release
     print_info "Downloading Jump CLI from latest release..."
@@ -121,6 +134,12 @@ else
     
     chmod +x "$BIN_DIR/jump"
     print_success "Downloaded and installed jump script to $BIN_DIR/jump"
+    
+    # Also install enhanced completion script if available
+    if [[ -f "enhanced_completion.sh" ]]; then
+        cp "enhanced_completion.sh" "$BIN_DIR/"
+        print_success "Installed enhanced completion script"
+    fi
 fi
 
 # Get shell config file
@@ -156,11 +175,67 @@ j() {
         return
     fi
     
+    # Check if it is a discovered directory that starts with colon
+    if [[ "$1" == :* ]]; then
+        # Strip the colon prefix and look up the directory
+        local dir_name="${1#:}"
+        if [[ -f "$HOME/bin/enhanced_completion.sh" ]]; then
+            source "$HOME/bin/enhanced_completion.sh"
+            # Look up the full path in cache
+            local full_path=$(grep "/$dir_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+            if [[ -n "$full_path" ]] && [[ -d "$full_path" ]]; then
+                printf "${CYAN}→${NC} ${BOLD}%s${NC} ${DIM}(discovered)${NC}\n" "$dir_name" >&2
+                cd "$full_path"
+                return
+            else
+                printf "${RED}✗ Directory \"%s\" not found in cache${NC}\n" "$dir_name" >&2
+                return 1
+            fi
+        else
+            printf "${RED}✗ Enhanced completion not available${NC}\n" >&2
+            return 1
+        fi
+    fi
+    
     # For shortcuts, execute the cd command with enhanced output
-    local result=$(jump --format-jump "$1")
+    # Check if user wants verbose output
+    if [[ "$2" == "--verbose" || "$2" == "-v" ]]; then
+        local result=$(jump --format-jump-verbose "$1")
+    else
+        local result=$(jump --format-jump "$1")
+    fi
+    
     if [[ $result == cd* ]]; then
         eval "$result"
     else
+        # If shortcut not found, try smart directory discovery
+        if [[ -f "$HOME/bin/enhanced_completion.sh" ]]; then
+            source "$HOME/bin/enhanced_completion.sh"
+            local discovered_dirs=($(find_smart_directories "$1" 2>/dev/null))
+            
+            if [[ ${#discovered_dirs[@]} -eq 1 ]]; then
+                # Found exactly one match, navigate to it
+                local dir_name="${discovered_dirs[0]#:}"  # Strip colon prefix if present
+                local full_path=$(grep "/$dir_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+                if [[ -n "$full_path" ]] && [[ -d "$full_path" ]]; then
+                    printf "${CYAN}→${NC} ${BOLD}%s${NC} ${DIM}(discovered)${NC}\n" "$dir_name" >&2
+                    cd "$full_path"
+                    return
+                fi
+            elif [[ ${#discovered_dirs[@]} -gt 1 ]]; then
+                # Multiple matches found, show options
+                printf "${YELLOW}Multiple directories found for \"%s\":${NC}\n" "$1" >&2
+                for dir_name in "${discovered_dirs[@]}"; do
+                    local clean_name="${dir_name#:}"  # Strip colon prefix if present
+                    local full_path=$(grep "/$clean_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
+                    printf "  ${GREEN}%s${NC} -> ${BLUE}%s${NC}\n" "$dir_name" "$full_path" >&2
+                done
+                printf "${DIM}Tip: Use exact name or create a shortcut with \"j add\"${NC}\n" >&2
+                return 1
+            fi
+        fi
+        
+        # No smart discovery or no matches found, show original error
         echo "$result"
     fi
 }
@@ -305,6 +380,12 @@ if [[ -n "$ZSH_VERSION" ]]; then
     
     # Register zsh completion
     compdef _jump_zsh_complete j
+fi
+
+# Enhanced completion with smart directory discovery
+# Source enhanced completion if available
+if [[ -f "$HOME/bin/enhanced_completion.sh" ]]; then
+    source "$HOME/bin/enhanced_completion.sh"
 fi'
 
 # Check if function already exists
