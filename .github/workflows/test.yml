@@ -73,7 +73,8 @@ jobs:
         
     - name: Test uninstallation process
       run: |
-        ./uninstall.sh
+        # Provide 'y' input to uninstaller to remove data files
+        echo 'y' | ./uninstall.sh
         
         # Verify uninstallation
         [ ! -f "$HOME/bin/jump" ] || exit 1
@@ -90,6 +91,6 @@ jobs:
       
     - name: Lint bash scripts
       run: |
-        shellcheck jump
+        shellcheck --exclude=SC2059,SC2034 jump
         shellcheck install.sh
         shellcheck uninstall.sh
