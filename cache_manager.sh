@@ -55,9 +55,21 @@ print_error() {
     echo -e "\033[0;31m✗ $1\033[0m"
 }
 
+# Cross-platform stat function for modification time
+get_file_mtime() {
+    local file="$1"
+    if stat -f %m "$file" >/dev/null 2>&1; then
+        # macOS/BSD
+        stat -f %m "$file" 2>/dev/null || echo 0
+    else
+        # Linux/GNU
+        stat -c %Y "$file" 2>/dev/null || echo 0
+    fi
+}
+
 # Check if another cache update is running
 is_cache_locked() {
-    [[ -f "$JUMP_CACHE_LOCK" ]] && [[ $(($(date +%s) - $(stat -f %m "$JUMP_CACHE_LOCK" 2>/dev/null || echo 0))) -lt 300 ]]
+    [[ -f "$JUMP_CACHE_LOCK" ]] && [[ $(($(date +%s) - $(get_file_mtime "$JUMP_CACHE_LOCK"))) -lt 300 ]]
 }
 
 # Create cache lock
@@ -73,7 +85,7 @@ remove_cache_lock() {
 # Get cache age in seconds
 get_cache_age() {
     if [[ -f "$JUMP_CACHE_FILE" ]]; then
-        echo $(($(date +%s) - $(stat -f %m "$JUMP_CACHE_FILE" 2>/dev/null || echo 0)))
+        echo $(($(date +%s) - $(get_file_mtime "$JUMP_CACHE_FILE")))
     else
         echo 999999  # Very old if doesn't exist
     fi
