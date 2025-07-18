@@ -35,9 +35,9 @@ score_directory_match() {
         score=100
     elif [[ "$dir_lower" =~ ^"$pattern_lower" ]]; then
         score=80
-    elif [[ "$dir_lower" =~ "$pattern_lower" ]]; then
+    elif [[ "$dir_lower" =~ $pattern_lower ]]; then
         score=60
-    elif echo "$dir_lower" | grep -q "$(echo "$pattern_lower" | sed 's/./&.*/g')"; then
+    elif echo "$dir_lower" | grep -q "${pattern_lower//./&.*}"; then
         score=40
     else
         return 1
@@ -110,7 +110,7 @@ find_smart_directories() {
             local score
             score=$(score_directory_match "$pattern" "$dir_name" "$dir_path" 2>/dev/null)
             
-            if [[ $? -eq 0 ]] && [[ $score -gt 0 ]]; then
+            if [[ -n "$score" ]] && [[ $score -gt 0 ]]; then
                 scored_results+=("$score:$dir_name:$dir_path")
             fi
         done < "$JUMP_CACHE_FILE"
@@ -238,6 +238,7 @@ if [[ -n "$ZSH_VERSION" ]]; then
         
         # Get shortcuts dynamically
         if [[ -f "$HOME/.jump_shortcuts" ]]; then
+            # shellcheck disable=SC2207,SC2296,SC2206
             shortcuts=(${(f)"$(cut -d: -f1 "$HOME/.jump_shortcuts" 2>/dev/null)"})
         fi
         
@@ -249,6 +250,7 @@ if [[ -n "$ZSH_VERSION" ]]; then
         case $state in
             first_arg)
                 local commands=(add update remove rm list ls search find edit stats export import help version)
+                # shellcheck disable=SC2128,SC2206
                 local combined=($commands $shortcuts)
                 
                 # Try smart directory discovery if no matches
@@ -256,6 +258,7 @@ if [[ -n "$ZSH_VERSION" ]]; then
                     'commands:commands:($commands)' \
                     'shortcuts:shortcuts:($shortcuts)'; then
                     if [[ -n "${words[2]}" ]] && [[ ${#words[2]} -ge 2 ]]; then
+                        # shellcheck disable=SC2207
                         local smart_dirs=($(find_smart_directories "${words[2]}"))
                         if [[ ${#smart_dirs[@]} -gt 0 ]]; then
                             _alternative 'smart-dirs:smart directories:($smart_dirs)'
@@ -264,6 +267,7 @@ if [[ -n "$ZSH_VERSION" ]]; then
                 fi
                 ;;
             second_arg)
+                # shellcheck disable=SC1087
                 case $words[2] in
                     add|update)
                         _message 'shortcut name'
@@ -281,6 +285,7 @@ if [[ -n "$ZSH_VERSION" ]]; then
                         _files -g '*.txt'
                         ;;
                     *)
+                        # shellcheck disable=SC2199,SC2076
                         if [[ " ${shortcuts[@]} " =~ " ${words[2]} " ]]; then
                             _alternative 'actions:actions:(run action do)'
                         fi
@@ -288,6 +293,7 @@ if [[ -n "$ZSH_VERSION" ]]; then
                 esac
                 ;;
             other_args)
+                # shellcheck disable=SC1087
                 case $words[2] in
                     add|update)
                         if [[ $CURRENT -eq 3 ]]; then
@@ -295,7 +301,9 @@ if [[ -n "$ZSH_VERSION" ]]; then
                             if ! _directories; then
                                 if [[ -n "${words[4]}" ]] && [[ ${#words[4]} -ge 2 ]]; then
                                     local smart_paths=()
+                                    # shellcheck disable=SC2207
                                     local smart_dirs=($(find_smart_directories "${words[4]}"))
+                                    # shellcheck disable=SC2128
                                     for dir_name in $smart_dirs; do
                                         if [[ -f "$JUMP_CACHE_FILE" ]]; then
                                             local full_path=$(grep "/$dir_name$" "$JUMP_CACHE_FILE" | head -1)
@@ -303,6 +311,7 @@ if [[ -n "$ZSH_VERSION" ]]; then
                                         fi
                                     done
                                     if [[ ${#smart_paths[@]} -gt 0 ]]; then
+                                        # shellcheck disable=SC2128
                                         _alternative "smart-paths:smart paths:($smart_paths)"
                                     fi
                                 fi
