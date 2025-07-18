@@ -176,7 +176,13 @@ j() {
     fi
     
     # For shortcuts, execute the cd command with enhanced output
-    local result=$(jump --format-jump "$1")
+    # Check if user wants verbose output
+    if [[ "$2" == "--verbose" || "$2" == "-v" ]]; then
+        local result=$(jump --format-jump-verbose "$1")
+    else
+        local result=$(jump --format-jump "$1")
+    fi
+    
     if [[ $result == cd* ]]; then
         eval "$result"
     else

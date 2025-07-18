@@ -406,7 +406,25 @@ case "$1" in
         shortcut_info=$(get_shortcut "$2")
         if [[ -n "$shortcut_info" ]]; then
             IFS=':' read -r name path actions <<< "$shortcut_info"
-            # Send informational messages to stderr so they display but don't interfere with cd command
+            # Minimal output for daily usage - just show where we're going
+            printf "${CYAN}→${NC} ${BOLD}%s${NC}\n" "$name" >&2
+            echo "cd \"$path\""
+        else
+            echo "cd \"$PWD\""
+        fi
+        ;;
+        
+    "--format-jump-verbose")
+        # Verbose output for when users want detailed information
+        if [[ -z "$2" ]]; then
+            echo "cd \"$PWD\""
+            exit 0
+        fi
+        
+        shortcut_info=$(get_shortcut "$2")
+        if [[ -n "$shortcut_info" ]]; then
+            IFS=':' read -r name path actions <<< "$shortcut_info"
+            # Detailed output with all information
             printf "$(print_success "Jumped to:") $(print_highlight "%s")\n" "$name" >&2
             printf "   $(print_path "%s")\n" "$path" >&2
             echo "" >&2
@@ -428,6 +446,8 @@ case "$1" in
         echo ""
         echo -e "${YELLOW}Basic Usage:${NC}"
         echo "  jump <shortcut> [action]      - Jump to directory and optionally run action"
+        echo "  j <shortcut>                  - Quick navigation (minimal output)"
+        echo "  j <shortcut> --verbose        - Show detailed jump information"
         echo ""
         echo -e "${YELLOW}Management:${NC}"
         echo "  jump add <name> <path> [cmd]  - Add new shortcut with optional command"
