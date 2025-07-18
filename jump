@@ -406,15 +406,16 @@ case "$1" in
         shortcut_info=$(get_shortcut "$2")
         if [[ -n "$shortcut_info" ]]; then
             IFS=':' read -r name path actions <<< "$shortcut_info"
-            printf "$(print_success "Jumped to:") $(print_highlight "%s")\n" "$name"
-            printf "   $(print_path "%s")\n" "$path"
-            echo ""
+            # Send informational messages to stderr so they display but don't interfere with cd command
+            printf "$(print_success "Jumped to:") $(print_highlight "%s")\n" "$name" >&2
+            printf "   $(print_path "%s")\n" "$path" >&2
+            echo "" >&2
             if [[ -n "$actions" ]]; then
-                printf "$(print_section "Available actions:") $(print_dim "%s")\n" "$actions"
-                print_tip "Run 'j $name run' to execute actions"
+                printf "$(print_section "Available actions:") $(print_dim "%s")\n" "$actions" >&2
+                print_tip "Run 'j $name run' to execute actions" >&2
             else
-                printf "$(print_dim "Available actions:") $(print_dim "%s")\n" "(none set)"
-                print_tip "Add actions with 'j update $name $path \"your command\"'"
+                printf "$(print_dim "Available actions:") $(print_dim "%s")\n" "(none set)" >&2
+                print_tip "Add actions with 'j update $name $path \"your command\"'" >&2
             fi
             echo "cd \"$path\""
         else
