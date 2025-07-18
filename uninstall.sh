@@ -64,11 +64,32 @@ for config_file in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.
             rm -f "${config_file}.tmp" 2>/dev/null || true
             
             print_success "Cleaned $config_file"
+            
+            # Auto-source the cleaned config file if it's the current shell
+            current_shell_config=""
+            case "$SHELL" in
+                */zsh) current_shell_config="$HOME/.zshrc" ;;
+                */bash) 
+                    if [[ -f "$HOME/.bashrc" ]]; then
+                        current_shell_config="$HOME/.bashrc"
+                    elif [[ -f "$HOME/.bash_profile" ]]; then
+                        current_shell_config="$HOME/.bash_profile"
+                    fi
+                    ;;
+            esac
+            
+            # Remove j function from current shell session and source cleaned config
+            if [[ "$config_file" == "$current_shell_config" ]]; then
+                print_info "Removing j function from current shell session..."
+                unset -f j 2>/dev/null || true
+                print_info "Auto-sourcing $config_file to apply changes..."
+                source "$config_file" 2>/dev/null || true
+            fi
         fi
     fi
 done
 
 echo ""
 print_success "Jump CLI has been uninstalled!"
-print_info "Please restart your terminal or source your shell config to complete removal."
+print_info "Changes have been applied to your current shell session."
 print_info "Backup files have been created for your shell configurations."
