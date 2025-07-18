@@ -1,0 +1,102 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        shell: [bash, zsh]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Install Bats (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bats
+    
+    - name: Install Bats (macOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install bats-core
+    
+    - name: Setup shell environment
+      run: |
+        if [ "${{ matrix.shell }}" = "zsh" ]; then
+          # Install zsh if not present
+          if ! command -v zsh >/dev/null 2>&1; then
+            if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+              sudo apt-get install -y zsh
+            fi
+          fi
+          export SHELL=$(which zsh)
+        else
+          export SHELL=$(which bash)
+        fi
+        echo "SHELL=$SHELL" >> $GITHUB_ENV
+    
+    - name: Run unit tests
+      run: bats tests/test_core_functionality.bats
+      
+    - name: Run integration tests
+      run: bats tests/test_integration.bats
+      
+    - name: Run edge case tests
+      run: bats tests/test_edge_cases.bats
+      
+    - name: Run shell integration tests
+      run: bats tests/test_shell_integration.bats
+      
+    - name: Test installation process
+      run: |
+        # Test installation
+        ./install.sh
+        
+        # Verify installation
+        [ -f "$HOME/bin/jump" ] || exit 1
+        [ -x "$HOME/bin/jump" ] || exit 1
+        
+        # Test basic functionality
+        export PATH="$HOME/bin:$PATH"
+        "$HOME/bin/jump" add test /tmp
+        "$HOME/bin/jump" list | grep -q "test"
+        "$HOME/bin/jump" remove test
+        
+    - name: Test uninstallation process
+      run: |
+        # Provide 'y' input to uninstaller to remove data files
+        echo 'y' | ./uninstall.sh
+        
+        # Verify uninstallation
+        [ ! -f "$HOME/bin/jump" ] || exit 1
+        
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Install ShellCheck
+      run: sudo apt-get update && sudo apt-get install -y shellcheck
+      
+    - name: Lint bash scripts
+      run: |
+        # Exclude common false positives:
+        # SC2059: printf with variables (our usage is safe)
+        # SC2034: unused variables (some are reserved/future use)
+        # SC2016: single quotes (intentional for shell completion)
+        # SC2155: declare and assign (acceptable pattern)
+        # SC2129: redirect style (acceptable pattern)
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129 jump
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129 install.sh
+        shellcheck --exclude=SC2059,SC2034,SC2016,SC2155,SC2129 uninstall.sh

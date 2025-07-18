@@ -156,12 +156,10 @@ j() {
         return
     fi
     
-    # For shortcuts, execute the cd command
-    local result=$(jump "$@")
+    # For shortcuts, execute the cd command with enhanced output
+    local result=$(jump --format-jump "$1")
     if [[ $result == cd* ]]; then
         eval "$result"
-        # Show current directory after jumping
-        echo "📁 $(pwd)"
     else
         echo "$result"
     fi
