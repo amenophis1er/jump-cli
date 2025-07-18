@@ -86,7 +86,22 @@ update_directory_cache() {
 
 # Check if cache needs updating
 should_update_cache() {
-    [[ ! -f "$JUMP_CACHE_FILE" ]] || [[ $(($(date +%s) - $(stat -f %m "$JUMP_CACHE_FILE" 2>/dev/null || echo 0))) -gt $JUMP_CACHE_MAX_AGE ]]
+    if [[ ! -f "$JUMP_CACHE_FILE" ]]; then
+        return 0
+    fi
+    
+    local file_time
+    # Cross-platform stat command for modification time
+    if stat -f %m "$JUMP_CACHE_FILE" >/dev/null 2>&1; then
+        # macOS/BSD
+        file_time=$(stat -f %m "$JUMP_CACHE_FILE" 2>/dev/null || echo 0)
+    else
+        # Linux/GNU
+        file_time=$(stat -c %Y "$JUMP_CACHE_FILE" 2>/dev/null || echo 0)
+    fi
+    
+    local current_time=$(date +%s)
+    [[ $((current_time - file_time)) -gt $JUMP_CACHE_MAX_AGE ]]
 }
 
 # Find smart directory suggestions
