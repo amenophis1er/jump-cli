@@ -179,7 +179,7 @@ teardown() {
 
 @test "handles shortcuts with newlines in actions" {
     # Test multiline actions
-    run jump_cmd add webapp "$TEST_HOME/Projects" $'echo "line1"\necho "line2"'
+    run jump_cmd add webapp_newlines "$TEST_HOME/Projects" $'echo "line1"\necho "line2"'
     assert_status_success
 }
 

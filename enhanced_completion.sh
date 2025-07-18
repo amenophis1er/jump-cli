@@ -116,11 +116,13 @@ find_smart_directories() {
         done < "$JUMP_CACHE_FILE"
     fi
     
-    printf '%s\n' "${scored_results[@]}" | \
-        sort -t: -k1,1nr | \
-        head -n "$JUMP_MAX_COMPLETIONS" | \
-        cut -d: -f2 | \
-        sed 's/^/:/'
+    if [[ ${#scored_results[@]} -gt 0 ]]; then
+        printf '%s\n' "${scored_results[@]}" | \
+            sort -t: -k1,1nr | \
+            head -n "$JUMP_MAX_COMPLETIONS" | \
+            cut -d: -f2 | \
+            sed 's/^/:/'
+    fi
 }
 
 # Enhanced completion function

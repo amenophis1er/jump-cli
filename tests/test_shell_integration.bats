@@ -245,9 +245,11 @@ EOF
     # Mock shell config detection
     SHELL_CONFIG="$temp_config"
     
-    # Extract just the shell function part
-    grep -A 50 "# Jump CLI - Shell Integration" "$BATS_TEST_DIRNAME/../install.sh" | \
-    grep -B 50 "# Jump CLI - Auto-completion" > "$temp_config"
+    # Extract and evaluate only the SHELL_FUNCTION variable from install.sh
+    eval "$(sed -n '/^SHELL_FUNCTION=/,/^fi'\''$/p' "$BATS_TEST_DIRNAME/../install.sh")"
+    
+    # Write the shell function to temp config
+    echo "$SHELL_FUNCTION" > "$temp_config"
     
     # Source the function
     source "$temp_config"
