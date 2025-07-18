@@ -89,6 +89,19 @@ if [[ -f "jump" ]]; then
     cp jump "$BIN_DIR/jump"
     chmod +x "$BIN_DIR/jump"
     print_success "Installed jump script from local directory to $BIN_DIR/jump"
+    
+    # Also install enhanced completion script if available
+    if [[ -f "enhanced_completion.sh" ]]; then
+        cp "enhanced_completion.sh" "$BIN_DIR/"
+        print_success "Installed enhanced completion script"
+    fi
+    
+    # Install cache manager script if available  
+    if [[ -f "cache_manager.sh" ]]; then
+        cp "cache_manager.sh" "$BIN_DIR/"
+        chmod +x "$BIN_DIR/cache_manager.sh"
+        print_success "Installed cache manager script"
+    fi
 else
     # Download from GitHub release
     print_info "Downloading Jump CLI from latest release..."
@@ -121,6 +134,12 @@ else
     
     chmod +x "$BIN_DIR/jump"
     print_success "Downloaded and installed jump script to $BIN_DIR/jump"
+    
+    # Also install enhanced completion script if available
+    if [[ -f "enhanced_completion.sh" ]]; then
+        cp "enhanced_completion.sh" "$BIN_DIR/"
+        print_success "Installed enhanced completion script"
+    fi
 fi
 
 # Get shell config file
@@ -305,6 +324,12 @@ if [[ -n "$ZSH_VERSION" ]]; then
     
     # Register zsh completion
     compdef _jump_zsh_complete j
+fi
+
+# Enhanced completion with smart directory discovery
+# Source enhanced completion if available
+if [[ -f "$HOME/bin/enhanced_completion.sh" ]]; then
+    source "$HOME/bin/enhanced_completion.sh"
 fi'
 
 # Check if function already exists

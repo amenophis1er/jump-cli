@@ -56,6 +56,12 @@ jobs:
     - name: Run shell integration tests
       run: bats tests/test_shell_integration.bats
       
+    - name: Run enhanced completion tests
+      run: bats tests/test_enhanced_completion.bats
+      
+    - name: Run cache manager tests
+      run: bats tests/test_cache_manager.bats
+      
     - name: Test installation process
       run: |
         # Test installation
