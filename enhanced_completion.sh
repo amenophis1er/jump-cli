@@ -37,7 +37,7 @@ score_directory_match() {
         score=80
     elif [[ "$dir_lower" =~ $pattern_lower ]]; then
         score=60
-    elif echo "$dir_lower" | grep -q "${pattern_lower//./&.*}"; then
+    elif echo "$dir_lower" | grep -q "$(echo "$pattern_lower" | sed 's/./&.*/g')"; then
         score=40
     else
         return 1

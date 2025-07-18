@@ -175,7 +175,7 @@ j() {
         return
     fi
     
-    # Check if it'\''s a discovered directory that starts with colon
+    # Check if it is a discovered directory that starts with colon
     if [[ "$1" == :* ]]; then
         # Strip the colon prefix and look up the directory
         local dir_name="${1#:}"
@@ -188,7 +188,7 @@ j() {
                 cd "$full_path"
                 return
             else
-                printf "${RED}✗ Directory '%s' not found in cache${NC}\n" "$dir_name" >&2
+                printf "${RED}✗ Directory \"%s\" not found in cache${NC}\n" "$dir_name" >&2
                 return 1
             fi
         else
@@ -224,13 +224,13 @@ j() {
                 fi
             elif [[ ${#discovered_dirs[@]} -gt 1 ]]; then
                 # Multiple matches found, show options
-                printf "${YELLOW}Multiple directories found for '%s':${NC}\n" "$1" >&2
+                printf "${YELLOW}Multiple directories found for \"%s\":${NC}\n" "$1" >&2
                 for dir_name in "${discovered_dirs[@]}"; do
                     local clean_name="${dir_name#:}"  # Strip colon prefix if present
                     local full_path=$(grep "/$clean_name$" "$HOME/.jump_directory_cache" 2>/dev/null | head -1)
                     printf "  ${GREEN}%s${NC} -> ${BLUE}%s${NC}\n" "$dir_name" "$full_path" >&2
                 done
-                printf "${DIM}Tip: Use exact name or create a shortcut with '\''j add'\''${NC}\n" >&2
+                printf "${DIM}Tip: Use exact name or create a shortcut with \"j add\"${NC}\n" >&2
                 return 1
             fi
         fi
